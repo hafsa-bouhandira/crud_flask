@@ -1,23 +1,31 @@
 from flask import Flask , Response , request
+from flask_cors import CORS, cross_origin
 import pymongo
 import json
 from bson.objectid import ObjectId
+
 app = Flask(__name__)
+CORS(app)
 
 try: 
     mongo = pymongo.MongoClient(host ="localhost", port = 27017 , serverSelectionTimeoutMS = 1000)
     db = mongo.company
     mongo.server_info()
 except: 
+
     print("ERROR - Cannot connect to db")
-####################################
+####################################1
+
 @app.route("/users" , methods = ["GET"])
 def get_some_users():
     try:
         data = list(db.users.find())
         for user in data :
             user["_id"] = str(user["_id"])
-        return Response(response = json.dumps(data),status = 500 , mimetype = "application/json")
+            # response = json.dumps(data)
+            # response.headers.add('Access-Control-Allow-Origin', '*')
+        return Response( response = json.dumps(data) ,status = 200 , mimetype = "application/json")
+        
     except Exception as ex:
         print(ex)
         return Response(response = json.dumps({"message":"cannot read users"}), status = 500 , mimetype = "application/json")
@@ -46,8 +54,10 @@ def update_users(id):
         dbResponse  = db.users.update_one({"_id": ObjectId(id)},{"$set":{"name": request.form["name"]}})
       
         if dbResponse.modified_count == 1: 
+            
             return Response(response = json.dumps({"message":" updated user "}), status = 200 , mimetype = "application/json")
         else:
+            print(dbResponse.modified_count)
             return Response(response = json.dumps({"message":"  Nothing to update"}), status = 200 , mimetype = "application/json")
     except Exception as ex:
         return Response(response = json.dumps({"message":"cannot update user"}), status = 500 , mimetype = "application/json")
@@ -75,20 +85,20 @@ def delete_users(id):
 
 
 #####################################
-@app.route('/')
-def hello_world():
-    print ("hello world")
+# @app.route('/')
+# def get_users():
+#     print ("hello world")
 
-    try:
-        data = list(db.users.find())
-        for user in data :
-            user["_id"] = str(user["_id"])
-        # response = json.dumps(data), status = 500 , mimetype = "application/json"
-        # print(response)
-        return Response(response = json.dumps(data),status = 500 , mimetype = "application/json")
-    except Exception as ex:
-        print(ex)
-        return Response(response = json.dumps({"message":"cannot read users"}), status = 500 , mimetype = "application/json")
-######################################
+#     try:
+#         data = list(db.users.find())
+#         for user in data :
+#             user["_id"] = str(user["_id"])
+#         # response = json.dumps(data), status = 500 , mimetype = "application/json"
+#         # print(response)
+#         return Response(response = json.dumps(data),status = 200 , mimetype = "application/json")
+#     except Exception as ex:
+#         print(ex)
+#         return Response(response = json.dumps({"message":"cannot read users"}), status = 500 , mimetype = "application/json")
+# ######################################
 if __name__ == "__main__":
     app.run(port= 80 , debug = True )
