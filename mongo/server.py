@@ -3,6 +3,7 @@ from flask_cors import CORS, cross_origin
 import pymongo
 import json
 from bson.objectid import ObjectId
+from flask import jsonify
 
 app = Flask(__name__)
 CORS(app)
@@ -14,7 +15,7 @@ try:
 except: 
 
     print("ERROR - Cannot connect to db")
-####################################1
+####################################
 
 @app.route("/users" , methods = ["GET"])
 def get_some_users():
@@ -36,15 +37,14 @@ def get_some_users():
 
 def  create_user():
     try :
-        user = {"name": request.form["name"],"lastName":request.form["lastName"],"age": request.form["age"] }
+        user = {"name": request.form.get('name'),"lastName":request.form.get('lastName'),"age": request.form.get('age') }
         dbResponse = db.users.insert_one(user)
         print(dbResponse.inserted_id)
         
         return Response(response = json.dumps({"message":"user created", "id": f"{dbResponse.inserted_id}"}),status = 200 , mimetype = "application/json")
     except Exception as ex:
-        print("******")
         print(ex)
-        print("******")
+        return Response(response = json.dumps({"message":"cannot add user"}), status = 500 , mimetype = "application/json")
 #####################################
 # Update 
 @app.route("/users/<id>", methods = ["PATCH"])
